@@ -1,5 +1,5 @@
-const staticCacheName = 'site-stattic-v3';
-const dynamicCache = 'site-dynamic-v1';
+const staticCacheName = 'site-stattic-v4';
+const dynamicCache = 'site-dynamic-v4';
 
 const assets = [
     '/',
@@ -62,25 +62,27 @@ self.addEventListener('activate',event=>{
 //Fetch Event
 self.addEventListener('fetch', event=>{
     // console.log('fetch event', event);
-    event.respondWith(
-        caches.match(event.request).then(cacheRes=>{
-            // console.log('cached items', cacheRes);
-            
-            return cacheRes || fetch(event.request)
-            .then(fetchRes=>{
-                return caches.open(dynamicCache)
-                .then(cache=>{
-                    cache.put(event.request.url, fetchRes.clone())
-                    limitCacheSize(dynamicCache, 15);
-                    return fetchRes
+    if(event.request.url.indexOf('firestore.googleapis.com')<0){ //excluding firebase API'S
+        event.respondWith(
+            caches.match(event.request).then(cacheRes=>{
+                // console.log('cached items', cacheRes;
+                
+                return cacheRes || fetch(event.request)
+                .then(fetchRes=>{
+                    return caches.open(dynamicCache)
+                    .then(cache=>{
+                        cache.put(event.request.url, fetchRes.clone())
+                        limitCacheSize(dynamicCache, 15);
+                        return fetchRes
+                    })
                 })
+            }).catch(error=>{
+                console.log('error', error);
+                if(event.request.url.indexOf('.html')>-1){
+                    return caches.match('/pages/fallback.html')
+                }
+                //
             })
-        }).catch(error=>{
-            console.log('error', error);
-            if(event.request.url.indexOf('.html')>-1){
-                return caches.match('/pages/fallback.html')
-            }
-             //
-        })
-    );
+        );
+    }
 }); 
